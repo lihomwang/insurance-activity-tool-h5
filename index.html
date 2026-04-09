@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>保险活动量管理 - 乐高骑士团队</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/activity.css">
+  <link rel="stylesheet" href="css/report.css">
+  <link rel="stylesheet" href="css/ranking.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    /* Apple 极简风格 - 阳光柠檬黄主题 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #FDFDFD;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #000000;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .animate-pulse-slow {
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .page {
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .container {
+      padding: 24px 24px 140px;
+      min-height: 100vh;
+      background: #FDFDFD;
+    }
+
+    /* 底部导航栏 - 扁平化无顶边 */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: none;
+      box-shadow: 0 -10px 40px rgba(250, 204, 21, 0.1);
+      z-index: 100;
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-item:active {
+      transform: scale(0.95);
+    }
+
+    .tab-icon {
+      font-size: 22px;
+      transition: all 0.2s;
+    }
+
+    .tab-item.active .tab-icon {
+      transform: scale(1.1);
+    }
+
+    .tab-text {
+      font-size: 10px;
+      font-weight: 700;
+      color: #9CA3AF;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tab-item.active .tab-text {
+      color: #FACC15;
+      font-weight: 900;
+    }
+
+    /* 工具类 */
+    .text-yellow-600 { color: #CA8A04; }
+    .text-orange-500 { color: #F97316; }
+    .text-white { color: #FFFFFF; }
+    .text-white-opacity { color: rgba(255, 255, 255, 0.5); }
+    .text-black { color: #000000; }
+    .text-gray-400 { color: #9CA3AF; }
+
+    .bg-yellow-50 { background-color: #FEF3C7; }
+    .bg-orange-50 { background-color: #FFF7ED; }
+    .bg-black { background-color: #000000; }
+    .bg-theme-primary { background-color: #FACC15; }
+
+    /* 退出登录按钮 */
+    .logout-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      background-color: #FEF3C7;
+    }
+
+    .logout-btn:active {
+      transform: scale(0.9);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 开屏页 -->
+    <div v-if="currentPage === 'index'" class="page index-page">
+      <div class="container index-container">
+        <!-- 背景装饰 -->
+        <div class="bg-decoration"></div>
+        <div class="bg-decoration-bottom"></div>
+
+        <!-- 主内容区 -->
+        <div class="content">
+          <!-- 太阳图标 -->
+          <div class="sun-icon-container animate-pulse-slow">
+            <span class="sun-icon">☀️</span>
+          </div>
+
+          <!-- 标题 -->
+          <h1 class="title">赚钱从<span>活动量开始</span></h1>
+
+          <!-- 登录按钮 -->
+          <button class="login-btn" @click="handleLogin" :disabled="isLoading">
+            <span class="login-btn-text">{{ isLoading ? '登录中...' : '开启赚钱' }}</span>
+            <span class="login-btn-icon">{{ isLoading ? '⏳' : '→' }}</span>
+          </button>
+        </div>
+
+        <!-- 底部团队名称 -->
+        <div class="footer">
+          <p class="footer-text">乐高骑士团队</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 首页 (Dashboard) -->
+    <div v-else-if="currentPage === 'dashboard'" class="page dashboard-page animate-fade-in">
+      <div class="container">
+        <!-- 顶部导航 -->
+        <div class="header">
+          <div class="header-left">
+            <span class="subtitle">Growth Power</span>
+            <span class="title">Hi, {{ userInfo?.name || '皮叔' }} 👋</span>
+          </div>
+          <button class="logout-btn" @click="handleLogout" title="退出登录">
+            <span>🚪</span>
+          </button>
+        </div>
+
+        <!-- 总分卡片 - 阳光柠檬黄 -->
+        <div class="score-card">
+          <div class="score-content">
+            <div class="score-header">
+              <span class="score-label">MY DAILY TARGET</span>
+              <span class="trophy">🏆</span>
+            </div>
+            <span class="score-subtitle">我的本周总分</span>
+            <span class="score-value">{{ weekScore }}</span>
+            <div class="activity-badge">
+              <span>🔥</span>
+              <span>本周已填报 {{ activityCount }} 次活动</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据日历 -->
+        <div class="calendar-card">
+          <div class="calendar-header">
+            <span class="calendar-title">📅 {{ currentMonth }}月数据日历</span>
+            <span class="calendar-label">Energy</span>
+          </div>
+          <div class="calendar-grid">
+            <div
+              v-for="(item, index) in calendarDays"
+              :key="index"
+              :class="['calendar-day', { 'is-today': item.isToday }]"
+            >
+              <span class="day-label">{{ item.day }}</span>
+              <span class="day-value">{{ item.date }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 已填报项目 -->
+        <div class="activities-section">
+          <span class="section-title">📝 已填报项目</span>
+          <div class="activities-list">
+            <div
+              v-for="(item, index) in activities"
+              :key="index"
+              class="activity-item"
+            >
+              <div class="activity-left">
+                <div class="activity-icon">
+                  <span>{{ item.icon }}</span>
+                </div>
+                <div class="activity-info">
+                  <span class="activity-name">{{ item.name }}</span>
+                  <span class="activity-detail">{{ item.count }}次 | +{{ item.score }}分</span>
+                </div>
+              </div>
+              <span class="activity-arrow">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+          <div class="tab-item active" @click="currentPage = 'dashboard'">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-text">首页</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'report'">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">报表</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'ranking'">
+            <span class="tab-icon">🏆</span>
+            <span class="tab-text">排行</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'activity'">
+            <span class="tab-icon">📝</span>
+            <span class="tab-text">填报</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 填报页 -->
+    <div v-else-if="currentPage === 'activity'" class="page activity-page animate-fade-in">
+      <div class="container">
+        <!-- 顶部标题 -->
+        <div class="header">
+          <div class="header-left">
+            <span class="subtitle">Action Required</span>
+            <h1 class="title">今日填报</h1>
+          </div>
+          <div class="date-badge">{{ currentDate }}</div>
+        </div>
+
+        <!-- 锁定提示 -->
+        <div v-if="isLocked" class="lock-banner">
+          <span class="lock-icon">🔒</span>
+          <div class="lock-text">
+            <span class="lock-title">当前不在填报时间</span>
+            <span class="lock-detail">填报时间：每天 9:00 - 21:00</span>
+          </div>
+        </div>
+
+        <!-- 实时分数卡片 -->
+        <div class="score-card sticky-score">
+          <div class="score-left">
+            <span class="score-label">Live Progress Score</span>
+            <span class="score-value">{{ totalScore }}</span>
+          </div>
+          <div class="score-icon" :class="{ 'animate-pulse': totalScore > 0 }">🔥</div>
+        </div>
+
+        <!-- 活动量列表 -->
+        <div class="dimensions-list">
+          <div
+            v-for="(item, index) in dimensions"
+            :key="index"
+            class="dimension-item"
+          >
+            <div class="dimension-left">
+              <div
+                class="dimension-icon-wrapper"
+                :style="{
+                  backgroundColor: counts[item.id] > 0 ? item.color : '#FDFDFD',
+                  color: counts[item.id] > 0 ? '#FFFFFF' : item.color
+                }"
+              >
+                <span class="dimension-icon">{{ item.icon }}</span>
+              </div>
+              <div class="dimension-info">
+                <span class="dimension-name">{{ item.name }}</span>
+                <span
+                  class="dimension-value"
+                  :style="{ color: counts[item.id] > 0 ? item.color : '#D1D5DB' }"
+                >
+                  Value: +{{ item.score }} PTS
+                </span>
+              </div>
+            </div>
+
+            <div class="counter">
+              <button
+                class="counter-btn"
+                :class="{ disabled: counts[item.id] === 0 || isLocked }"
+                @click="updateCount(item.id, -1)"
+                :disabled="counts[item.id] === 0 || isLocked"
+              >
+                <span class="btn-icon">−</span>
+              </button>
+              <span class="counter-value">{{ counts[item.id] || 0 }}</span>
+              <button
+                class="counter-btn add"
+                :style="{ backgroundColor: isLocked ? '#D1D5DB' : item.color }"
+                @click="updateCount(item.id, 1)"
+                :disabled="isLocked"
+              >
+                <span class="btn-icon">+</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提交按钮 -->
+        <div class="submit-wrapper">
+          <button
+            class="submit-btn"
+            :class="{ disabled: isLocked }"
+            @click="handleSubmit"
+            :disabled="isLocked"
+          >
+            <span class="submit-icon">{{ isLocked ? '🔒' : '✓' }}</span>
+            <span class="submit-text">{{ isLocked ? '已停止填报' : '提交今日活动量' }}</span>
+          </button>
+        </div>
+
+        <!-- 成功提示 -->
+        <div v-if="showSuccessToast" class="toast">
+          <div class="toast-content">
+            <span class="toast-icon">✓</span>
+            <div class="toast-text">
+              <span class="toast-title">Sync Success!</span>
+              <span class="toast-detail">Activity data updated</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+          <div class="tab-item" @click="currentPage = 'dashboard'">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-text">首页</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'report'">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">报表</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'ranking'">
+            <span class="tab-icon">🏆</span>
+            <span class="tab-text">排行</span>
+          </div>
+          <div class="tab-item active" @click="currentPage = 'activity'">
+            <span class="tab-icon">📝</span>
+            <span class="tab-text">填报</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 报表页 -->
+    <div v-else-if="currentPage === 'report'" class="page report-page animate-fade-in">
+      <div class="container">
+        <!-- 顶部标题 -->
+        <div class="header">
+          <span class="title">团队实时报表</span>
+          <span class="subtitle">Real-time Team Insights</span>
+        </div>
+
+        <!-- 4 个统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card bg-yellow-50">
+            <div class="stat-icon text-yellow-600">👥</div>
+            <span class="stat-value text-yellow-600">{{ teamStats.totalMembers }}</span>
+            <span class="stat-label">成员总数</span>
+          </div>
+          <div class="stat-card bg-orange-50">
+            <div class="stat-icon text-orange-500">📈</div>
+            <span class="stat-value text-orange-500">{{ teamStats.avgScore }}</span>
+            <span class="stat-label">人均分数</span>
+          </div>
+          <div class="stat-card bg-black">
+            <div class="stat-icon text-white">📊</div>
+            <span class="stat-value text-white">{{ teamStats.totalScore }}</span>
+            <span class="stat-label text-white-opacity">总活动分</span>
+          </div>
+          <div class="stat-card bg-theme-primary">
+            <div class="stat-icon text-black">⭐</div>
+            <span class="stat-value text-black">{{ teamStats.starName }}</span>
+            <span class="stat-label">本周之星</span>
+          </div>
+        </div>
+
+        <!-- 各维度活动汇总 -->
+        <div class="dimensions-section">
+          <div class="section-header">
+            <span class="section-title">✨ 各维度活动汇总</span>
+          </div>
+          <div class="dimensions-list">
+            <div
+              v-for="(item, index) in dimensions"
+              :key="index"
+              class="dimension-item"
+            >
+              <div class="dimension-header">
+                <div class="dimension-left">
+                  <div
+                    class="dimension-icon"
+                    :style="{ backgroundColor: item.bg, color: item.color }"
+                  >
+                    <span>{{ item.icon }}</span>
+                  </div>
+                  <div class="dimension-info">
+                    <span class="dimension-name">{{ item.name }}</span>
+                    <span class="dimension-eng">{{ item.eng }}</span>
+                  </div>
+                </div>
+                <div class="dimension-stats">
+                  <span class="dimension-count">{{ getDimensionStat(item.id).count }} 次</span>
+                  <span class="dimension-score">+{{ getDimensionStat(item.id).score }} PTS</span>
+                </div>
+              </div>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  :style="{
+                    width: (getDimensionStat(item.id).count / 200 * 100) + '%',
+                    backgroundColor: item.color
+                  }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+          <div class="tab-item" @click="currentPage = 'dashboard'">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-text">首页</span>
+          </div>
+          <div class="tab-item active" @click="currentPage = 'report'">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">报表</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'ranking'">
+            <span class="tab-icon">🏆</span>
+            <span class="tab-text">排行</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'activity'">
+            <span class="tab-icon">📝</span>
+            <span class="tab-text">填报</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 排行页 -->
+    <div v-else-if="currentPage === 'ranking'" class="page ranking-page animate-fade-in">
+      <div class="container">
+        <!-- 顶部标题 -->
+        <div class="header">
+          <span class="title">精英排行</span>
+          <span class="subtitle">The Hall of Fame</span>
+        </div>
+
+        <!-- 排行列表 -->
+        <div class="ranking-list">
+          <div
+            v-for="(item, index) in members"
+            :key="index"
+            :class="['ranking-item', { 'is-first': item.rank === 1 }]"
+          >
+            <div class="ranking-left">
+              <!-- 排名徽章 -->
+              <div
+                class="rank-badge"
+                :style="{
+                  background: getRankBadgeStyle(item.rank),
+                  color: item.rank <= 3 ? '#FFFFFF' : '#6B7280'
+                }"
+              >
+                {{ item.rank }}
+              </div>
+
+              <!-- 头像 -->
+              <div class="avatar-container">
+                <span class="avatar-emoji">{{ item.avatar }}</span>
+                <span v-if="item.rank === 1" class="crown">👑</span>
+              </div>
+
+              <!-- 信息 -->
+              <div class="member-info">
+                <span class="member-name">{{ item.name }}</span>
+                <span class="member-detail">Score Leader</span>
+              </div>
+            </div>
+
+            <!-- 分数 -->
+            <div class="ranking-score">
+              <span
+                class="score-value"
+                :style="{ color: getRankScoreColor(item.rank) }"
+              >
+                {{ item.score }}
+              </span>
+              <span class="score-label">Points</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+          <div class="tab-item" @click="currentPage = 'dashboard'">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-text">首页</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'report'">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">报表</span>
+          </div>
+          <div class="tab-item active" @click="currentPage = 'ranking'">
+            <span class="tab-icon">🏆</span>
+            <span class="tab-text">排行</span>
+          </div>
+          <div class="tab-item" @click="currentPage = 'activity'">
+            <span class="tab-icon">📝</span>
+            <span class="tab-text">填报</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

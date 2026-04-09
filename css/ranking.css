@@ -1,0 +1,163 @@
+/* 排行页面样式 - Apple 极简风格 */
+.page.ranking-page .container {
+  padding: 24px 24px 140px;
+}
+
+/* 顶部标题 */
+.page.ranking-page .header {
+  margin-bottom: 24px;
+  padding-top: 12px;
+}
+
+.page.ranking-page .title {
+  font-size: 28px;
+  font-weight: 900;
+  color: #000000;
+  display: block;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-color: #FACC15;
+  text-underline-offset: 8px;
+}
+
+.page.ranking-page .subtitle {
+  font-size: 10px;
+  font-weight: 900;
+  color: #FACC15;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 8px;
+  display: block;
+  font-style: italic;
+}
+
+/* 排行列表 */
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.ranking-item {
+  background: #FFFFFF;
+  border-radius: 40px;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #F9FAFB;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s;
+}
+
+.ranking-item.is-first {
+  border: 2px solid #FACC15;
+  box-shadow: 0 8px 24px rgba(250, 204, 21, 0.2);
+}
+
+.ranking-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 排名徽章 */
+.rank-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 第一名金色光环 */
+.ranking-item:first-child .rank-badge {
+  box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
+}
+
+/* 头像容器 */
+.avatar-container {
+  position: relative;
+  width: 52px;
+  height: 52px;
+}
+
+.avatar-emoji {
+  width: 52px;
+  height: 52px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #FACC15 0%, #FDE047 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.crown {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* 成员信息 */
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-name {
+  font-size: 15px;
+  font-weight: 900;
+  color: #000000;
+}
+
+.member-detail {
+  font-size: 10px;
+  font-weight: 900;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+/* 分数区域 */
+.ranking-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.score-value {
+  font-size: 32px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -2px;
+}
+
+.score-label {
+  font-size: 8px;
+  font-weight: 900;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 动画 */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-in {
+  animation: slideInRight 0.5s ease-out;
+}
