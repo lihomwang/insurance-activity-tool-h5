@@ -214,6 +214,10 @@ const api = {
       return { success: true, message: '提交成功' }
     }
 
+    if (!data.items || !Array.isArray(data.items)) {
+      throw new Error('提交数据格式错误')
+    }
+
     const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
     const payload = {
       user_id: user.id,
@@ -237,6 +241,8 @@ const api = {
       return sum + (dimensionScores[item.dimensionId] || 0) * item.count
     }, 0)
 
+    console.log('[API] 提交数据:', payload)
+
     const response = await fetch(`${API_BASE}/api/activities/submit`, {
       method: 'POST',
       headers: {
@@ -248,15 +254,17 @@ const api = {
 
     if (!response.ok) {
       const error = await response.json()
+      console.error('[API] 提交失败:', error)
       throw new Error(error.message || '提交失败')
     }
 
     const result = await response.json()
+    console.log('[API] 提交成功:', result)
 
     // 提交成功后刷新缓存数据
     const today = new Date().toISOString().split('T')[0]
     const activitiesData = {}
-    payload.items.forEach(item => {
+    data.items.forEach(item => {
       if (item.count > 0) {
         activitiesData[item.dimensionId] = item.count
       }
