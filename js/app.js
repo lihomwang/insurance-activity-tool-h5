@@ -294,6 +294,11 @@ createApp({
         const result = await api.submitActivity(submitData)
         if (result.success) {
           this.showSuccessToast = true
+
+          // 清除今日缓存（让下次查询使用最新数据）
+          const today = new Date().toISOString().split('T')[0]
+          localStorage.removeItem('cached_activities_' + today)
+
           setTimeout(() => {
             this.showSuccessToast = false
             DIMENSIONS.forEach(dim => {

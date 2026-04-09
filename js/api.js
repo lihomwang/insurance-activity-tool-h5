@@ -93,7 +93,12 @@ const api = {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       if (response.ok) {
-        return await response.json()
+        const result = await response.json()
+        console.log('[API] week-stats result:', result)
+        return {
+          weekScore: result.weekScore || 0,
+          activityCount: result.activityCount || 0
+        }
       }
     } catch (e) {
       console.error('获取周统计失败:', e)
@@ -111,12 +116,23 @@ const api = {
 
     try {
       const today = new Date().toISOString().split('T')[0]
+
+      // 优先使用缓存（提交后临时缓存）
+      const cached = localStorage.getItem('cached_activities_' + today)
+      if (cached) {
+        const data = JSON.parse(cached)
+        if (Object.keys(data).length > 0) {
+          return data
+        }
+      }
+
       const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
       const response = await fetch(`${API_BASE}/api/activities/today?date=${today}`, {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       if (response.ok) {
-        return await response.json()
+        const result = await response.json()
+        return result.data || result
       }
     } catch (e) {
       console.error('获取活动数据失败:', e)
@@ -135,7 +151,9 @@ const api = {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       if (response.ok) {
-        return await response.json()
+        const result = await response.json()
+        console.log('[API] team-stats result:', result)
+        return result.data || { totalMembers: 0, avgScore: 0, totalScore: 0, starName: '-' }
       }
     } catch (e) {
       console.error('获取团队统计失败:', e)
@@ -154,7 +172,9 @@ const api = {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       if (response.ok) {
-        return await response.json()
+        const result = await response.json()
+        console.log('[API] dimension-stats result:', result)
+        return result.data || {}
       }
     } catch (e) {
       console.error('获取维度统计失败:', e)
@@ -173,7 +193,9 @@ const api = {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       if (response.ok) {
-        return await response.json()
+        const result = await response.json()
+        console.log('[API] ranking result:', result)
+        return result.data || []
       }
     } catch (e) {
       console.error('获取排行榜失败:', e)
@@ -229,7 +251,21 @@ const api = {
       throw new Error(error.message || '提交失败')
     }
 
-    return await response.json()
+    const result = await response.json()
+
+    // 提交成功后刷新缓存数据
+    const today = new Date().toISOString().split('T')[0]
+    const activitiesData = {}
+    payload.items.forEach(item => {
+      if (item.count > 0) {
+        activitiesData[item.dimensionId] = item.count
+      }
+    })
+
+    // 缓存今日活动数据，避免立即查询时数据库尚未写入
+    localStorage.setItem('cached_activities_' + today, JSON.stringify(activitiesData))
+
+    return result
   },
 
   // 检查锁定状态
