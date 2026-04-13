@@ -220,8 +220,8 @@ const api = {
 
     const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
     const payload = {
+      user_name: user.name,
       user_id: user.id,
-      feishu_user_id: user.feishu_user_id,
       activity_date: data.date,
       is_submitted: 1
     }
@@ -230,16 +230,6 @@ const api = {
     data.items.forEach(item => {
       payload[item.dimensionId] = item.count
     })
-
-    // 计算总分
-    const dimensionScores = {
-      new_leads: 1, referral: 3, invitation: 1, sales_meeting: 10,
-      recruit_meeting: 10, business_plan: 1, deal: 10, eop_guest: 5,
-      cc_assessment: 5, training: 10
-    }
-    payload.total_score = data.items.reduce((sum, item) => {
-      return sum + (dimensionScores[item.dimensionId] || 0) * item.count
-    }, 0)
 
     console.log('[API] 提交数据:', payload)
 
@@ -274,6 +264,29 @@ const api = {
     localStorage.setItem('cached_activities_' + today, JSON.stringify(activitiesData))
 
     return result
+  },
+
+  // 获取今日累计分数和已有计数
+  async getTodayScore() {
+    const user = await this.getUserInfo()
+    if (!user) return { todayScore: 0, hasSubmitted: false, counts: {} }
+
+    if (USE_MOCK) return { todayScore: 0, hasSubmitted: false, counts: {} }
+
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+      const response = await fetch(`${API_BASE}/api/activities/today-score?date=${today}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      if (response.ok) {
+        return await response.json()
+      }
+    } catch (e) {
+      console.error('获取今日分数失败:', e)
+    }
+
+    return { todayScore: 0, hasSubmitted: false, counts: {} }
   },
 
   // 检查锁定状态

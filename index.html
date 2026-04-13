@@ -149,6 +149,23 @@
     .logout-btn:active {
       transform: scale(0.9);
     }
+
+    /* 今日累计分数标签 */
+    .today-score-label {
+      font-size: 12px;
+      color: #6B7280;
+      font-weight: 500;
+      margin-top: 2px;
+      display: block;
+    }
+
+    /* 首页今日得分 */
+    .today-score-inline {
+      font-size: 13px;
+      color: #FACC15;
+      font-weight: 600;
+      margin: 4px 0;
+    }
   </style>
 </head>
 <body>
@@ -207,6 +224,9 @@
             </div>
             <span class="score-subtitle">我的本周总分</span>
             <span class="score-value">{{ weekScore }}</span>
+            <div class="today-score-inline" v-if="todayScore > 0">
+              <span>今日得分: {{ todayScore }} 分</span>
+            </div>
             <div class="activity-badge">
               <span>🔥</span>
               <span>本周已填报 {{ activityCount }} 次活动</span>
@@ -303,6 +323,7 @@
           <div class="score-left">
             <span class="score-label">Live Progress Score</span>
             <span class="score-value">{{ totalScore }}</span>
+            <span class="today-score-label" v-if="todayScore > 0">今日已累计: {{ todayScore }} 分</span>
           </div>
           <div class="score-icon" :class="{ 'animate-pulse': totalScore > 0 }">🔥</div>
         </div>

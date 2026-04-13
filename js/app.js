@@ -71,6 +71,8 @@ createApp({
       userInfo: null,
       weekScore: 0,
       activityCount: 0,
+      todayScore: 0,
+      todayCounts: {},
       currentMonth: new Date().getMonth() + 1,
       calendarDays: generateCalendarDays(),
       currentDate: formatCurrentDate(),
@@ -160,11 +162,15 @@ createApp({
         this.weekScore = weekStats.weekScore || 0
         this.activityCount = weekStats.activityCount || 0
         this.activities = this.formatActivities(activities)
+        // 同时刷新今日累计分数
+        const todayData = await api.getTodayScore()
+        this.todayScore = todayData.todayScore || 0
       } catch (error) {
         console.error('加载数据失败:', error)
         this.weekScore = 0
         this.activityCount = 0
         this.activities = []
+        this.todayScore = 0
       }
     },
 
@@ -229,6 +235,26 @@ createApp({
       } catch (error) {
         console.error('加载排行数据失败:', error)
         this.members = []
+      }
+    },
+
+    // 加载今日数据（累计分数和已有计数）
+    async loadTodayData() {
+      try {
+        const todayData = await api.getTodayScore()
+        this.todayScore = todayData.todayScore || 0
+        if (todayData.hasSubmitted && todayData.counts) {
+          // 预填已有计数，让用户继续累加
+          Object.entries(todayData.counts).forEach(([key, value]) => {
+            if (value > 0) {
+              this.counts[key] = value
+            }
+          })
+        }
+        this.calculateTotalScore()
+      } catch (error) {
+        console.error('加载今日数据失败:', error)
+        this.todayScore = 0
       }
     },
 
@@ -301,10 +327,13 @@ createApp({
 
           setTimeout(() => {
             this.showSuccessToast = false
+            // 重置计数
             DIMENSIONS.forEach(dim => {
               this.counts[dim.id] = 0
             })
             this.totalScore = 0
+            this.todayScore = 0
+            this.todayCounts = {}
             this.currentPage = 'dashboard'
             this.loadDashboardData()
           }, 1500)
@@ -330,6 +359,8 @@ createApp({
         await this.loadReportData()
       } else if (newPage === 'ranking') {
         await this.loadRankingData()
+      } else if (newPage === 'activity') {
+        await this.loadTodayData()
       }
       this.checkLockStatus()
     }
