@@ -176,7 +176,7 @@ createApp({
 
     // 格式化活动数据
     formatActivities(activities) {
-      if (!activities || !activities.length) return []
+      if (!activities || typeof activities !== 'object') return []
 
       const dimensionMap = {
         new_leads: { icon: '📝', name: '新增准客户' },

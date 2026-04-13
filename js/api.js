@@ -107,38 +107,27 @@ const api = {
     return { weekScore: 0, activityCount: 0 }
   },
 
-  // 获取已填报活动
+  // 获取已填报活动（本周汇总）
   async getActivities() {
     const user = await this.getUserInfo()
-    if (!user) return []
+    if (!user) return {}
 
     if (USE_MOCK) return mockData.activities
 
     try {
-      const today = new Date().toISOString().split('T')[0]
-
-      // 优先使用缓存（提交后临时缓存）
-      const cached = localStorage.getItem('cached_activities_' + today)
-      if (cached) {
-        const data = JSON.parse(cached)
-        if (Object.keys(data).length > 0) {
-          return data
-        }
-      }
-
       const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-      const response = await fetch(`${API_BASE}/api/activities/today?date=${today}`, {
+      const response = await fetch(`${API_BASE}/api/activities/week-summary`, {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       if (response.ok) {
         const result = await response.json()
-        return result.data || result
+        return result.data || {}
       }
     } catch (e) {
       console.error('获取活动数据失败:', e)
     }
 
-    return []
+    return {}
   },
 
   // 获取团队统计
