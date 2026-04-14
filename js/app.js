@@ -155,15 +155,15 @@ createApp({
     // 加载首页数据
     async loadDashboardData() {
       try {
-        const [weekStats, activities] = await Promise.all([
+        const [weekStats, activities, todayData] = await Promise.all([
           api.getWeekStats(),
-          api.getActivities()
+          api.getActivities(),
+          api.getTodayScore()
         ])
         this.weekScore = weekStats.weekScore || 0
         this.activityCount = weekStats.activityCount || 0
         this.activities = this.formatActivities(activities)
-        // 同时刷新今日累计分数
-        const todayData = await api.getTodayScore()
+        // 更新今日得分（后端返回的当日累计总分）
         this.todayScore = todayData.todayScore || 0
       } catch (error) {
         console.error('加载数据失败:', error)
@@ -319,6 +319,10 @@ createApp({
       try {
         const result = await api.submitActivity(submitData)
         if (result.success) {
+          // 使用后端返回的累计总分更新 todayScore
+          if (result.data && result.data.totalScore !== undefined) {
+            this.todayScore = result.data.totalScore
+          }
           this.showSuccessToast = true
 
           // 清除今日缓存（让下次查询使用最新数据）
@@ -327,12 +331,11 @@ createApp({
 
           setTimeout(() => {
             this.showSuccessToast = false
-            // 重置计数
+            // 重置表单计数和本次新增分数
             DIMENSIONS.forEach(dim => {
               this.counts[dim.id] = 0
             })
             this.totalScore = 0
-            this.todayScore = 0
             this.todayCounts = {}
             this.currentPage = 'dashboard'
             this.loadDashboardData()

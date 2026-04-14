@@ -318,12 +318,13 @@
           </div>
         </div>
 
-        <!-- 实时分数卡片 -->
+        <!-- 今日得分卡片 -->
         <div class="score-card sticky-score">
           <div class="score-left">
-            <span class="score-label">Live Progress Score</span>
-            <span class="score-value">{{ totalScore }}</span>
-            <span class="today-score-label" v-if="todayScore > 0">今日已累计: {{ todayScore }} 分</span>
+            <span class="score-label">今日得分</span>
+            <span class="score-value">{{ todayScore + totalScore }}</span>
+            <span class="today-score-label" v-if="todayScore > 0 && totalScore === 0">今日已提交: {{ todayScore }} 分</span>
+            <span class="today-score-label" v-else-if="totalScore > 0">本次新增: +{{ totalScore }} 分</span>
           </div>
           <div class="score-icon" :class="{ 'animate-pulse': totalScore > 0 }">🔥</div>
         </div>
