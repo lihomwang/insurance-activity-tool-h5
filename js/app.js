@@ -86,7 +86,8 @@ createApp({
       showSuccessToast: false,
       isLocked: false,
       lockMessage: '',
-      isLoading: false
+      isLoading: false,
+      isEditMode: false
     }
   },
 
@@ -243,14 +244,12 @@ createApp({
       try {
         const todayData = await api.getTodayScore()
         this.todayScore = todayData.todayScore || 0
+        // 保存今日已提交的数据（用于编辑模式）
         if (todayData.hasSubmitted && todayData.counts) {
-          // 预填已有计数，让用户继续累加
-          Object.entries(todayData.counts).forEach(([key, value]) => {
-            if (value > 0) {
-              this.counts[key] = value
-            }
-          })
+          this.todayCounts = todayData.counts
         }
+        // 不再预填已有计数，避免 todayScore + totalScore 重复显示
+        // totalScore 只记录用户本次新增的分数
         this.calculateTotalScore()
       } catch (error) {
         console.error('加载今日数据失败:', error)
@@ -344,6 +343,28 @@ createApp({
       } catch (error) {
         alert('提交失败：' + error.message)
       }
+    },
+
+    // 进入编辑模式（修改今日已提交的数据）
+    enterEditMode() {
+      this.isEditMode = true
+      // 预填今日已提交的数据
+      Object.entries(this.todayCounts).forEach(([key, value]) => {
+        if (value > 0) {
+          this.counts[key] = value
+        }
+      })
+      this.calculateTotalScore()
+    },
+
+    // 取消编辑
+    cancelEdit() {
+      this.isEditMode = false
+      // 重置表单
+      DIMENSIONS.forEach(dim => {
+        this.counts[dim.id] = 0
+      })
+      this.totalScore = 0
     },
 
     // 退出登录

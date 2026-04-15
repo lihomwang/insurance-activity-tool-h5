@@ -322,11 +322,19 @@
         <div class="score-card sticky-score">
           <div class="score-left">
             <span class="score-label">今日得分</span>
-            <span class="score-value">{{ todayScore + totalScore }}</span>
-            <span class="today-score-label" v-if="todayScore > 0 && totalScore === 0">今日已提交: {{ todayScore }} 分</span>
+            <span class="score-value">{{ (todayScore || 0) + totalScore }}</span>
+            <span class="today-score-label" v-if="todayScore > 0 && totalScore === 0 && !isEditMode">今日已提交: {{ todayScore }} 分</span>
+            <span class="today-score-label" v-else-if="isEditMode">修改中: {{ totalScore }} 分（提交后覆盖原数据）</span>
             <span class="today-score-label" v-else-if="totalScore > 0">本次新增: +{{ totalScore }} 分</span>
           </div>
           <div class="score-icon" :class="{ 'animate-pulse': totalScore > 0 }">🔥</div>
+        </div>
+
+        <!-- 修改数据按钮（已提交时显示） -->
+        <div v-if="todayScore > 0 && !isEditMode" class="edit-hint-wrapper">
+          <button class="edit-hint-btn" @click="enterEditMode">
+            <span>✏️ 修改今日数据</span>
+          </button>
         </div>
 
         <!-- 活动量列表 -->
@@ -380,15 +388,18 @@
         </div>
 
         <!-- 提交按钮 -->
-        <div class="submit-wrapper">
+        <div class="submit-wrapper" :class="{ 'has-cancel': isEditMode }">
           <button
             class="submit-btn"
             :class="{ disabled: isLocked }"
             @click="handleSubmit"
             :disabled="isLocked"
           >
-            <span class="submit-icon">{{ isLocked ? '🔒' : '✓' }}</span>
-            <span class="submit-text">{{ isLocked ? '已停止填报' : '提交今日活动量' }}</span>
+            <span class="submit-icon">{{ isLocked ? '🔒' : (isEditMode ? '✓' : '✓') }}</span>
+            <span class="submit-text">{{ isLocked ? '已停止填报' : (isEditMode ? '保存修改' : '提交今日活动量') }}</span>
+          </button>
+          <button v-if="isEditMode" class="cancel-edit-btn" @click="cancelEdit">
+            取消修改
           </button>
         </div>
 
